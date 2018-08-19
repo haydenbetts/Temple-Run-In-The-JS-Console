@@ -16,11 +16,14 @@ var drawPlayer = function(playerPos) {
 lose = function() {
   paused = true;
   return setTimeout(function() {
-    score--;
+    score--
+    if (score === -1) {
+      score = 0;
+    };
     alert("Your score is: " + score);
     score = 0;
     paused = false;
-    frogPos = 2;
+    playerPos = 2;
   }, 60);
 };
 
