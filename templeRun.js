@@ -6,11 +6,16 @@ var obstacle = "O";
 var playerPos = 2;
 var street = [laneTemplateInitial, laneTemplateInitial, laneTemplateEmpty, laneTemplateInitial, laneTemplateInitial];
 var paused = false;
+var highScore = 0;
 var score = 0;
 var keypressed;
 
 var drawPlayer = function(playerPos) {
   street[playerPos] = playerChar + street[playerPos].slice(1); 
+}
+
+function isHighestScore(score, highScore) {
+  return score > highScore;
 }
 
 lose = function() {
@@ -20,7 +25,12 @@ lose = function() {
     if (score === -1) {
       score = 0;
     };
-    alert("Your score is: " + score);
+    
+    if (isHighestScore(score, highScore)) {
+      highScore = score;
+    }
+    
+    alert("Your score is: " + score + "\n" + "Your high score is: " + highScore);
     score = 0;
     paused = false;
     playerPos = 2;
