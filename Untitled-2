@@ -1,10 +1,3 @@
-/*
- TODO: 
- 1) When obstacles are inserted, they seem to start one frame
- to the left of where they should be
- 2) emojis
- 3) closures (less global vars!!!!)
-*/
 
 var laneTemplateEmpty = "--------------------";
 var laneTemplateInitial = "-------------------O"
@@ -15,19 +8,8 @@ var street = [laneTemplateInitial, laneTemplateInitial, laneTemplateEmpty, laneT
 var paused = false;
 var highScore = 0;
 var score = 0;
-
-/* TODO we are having some trouble actually displaying the raw score.
-   This is a hacky workaround.
-*/
-var displayScore = function() {
-  if (score === 0 || score === -1) {
-    return 0;
-  } else {
-    return score - 1;
-  }
-}
-
 var keypressed;
+
 /* frameCounter has a range 0-19. It increments each time
    animation runs. We reset it when it reaches 19 (e.g. when one
    elt has reached the end of street */
@@ -45,15 +27,24 @@ function isHighestScore(score, highScore) {
 lose = function() {
   paused = true;
   return setTimeout(function() {
- 
     
-    if (isHighestScore(displayScore(), highScore)) {
-      highScore = displayScore();
+    /* TODO in order to make score = 0 if the player dies on the
+    first wall, we have to decrement score. There may be a less hacky
+    way to do this */
+    score--
+    if (score === -1) {
+      score = 0;
+    };
+    
+    if (isHighestScore(score, highScore)) {
+      highScore = score;
     }
     
-    alert("Your score is: " + displayScore() + "\n" + "Your high score is: " + highScore);
-    street = [laneTemplateInitial, laneTemplateInitial, laneTemplateEmpty, laneTemplateInitial, laneTemplateInitial];
+    alert("Your score is: " + score + "\n" + "Your high score is: " + highScore);
+    
+    /* resetting global vars for next time */
     score = 0;
+    street = [laneTemplateInitial, laneTemplateInitial, laneTemplateEmpty, laneTemplateInitial, laneTemplateInitial];
     paused = false;
     playerPos = 2;
     frameCounter = 0;
@@ -96,23 +87,26 @@ var animate = function(){
     return;
   }
   
+    /* here we concatenate 4 obstacles and 1 blank to the end of street */
   if (frameCounter === 9) {
     
-    /* this statement takes the first graphic below 
-    and turns it into the second
-    "----------O---------"
-    "----------O---------"
-    "X-------------------"
-    "----------O---------"
-    "----------O---------"
     
-    "----------O--------O"
-    "----------O--------O"
-    "X------------------O"
-    "----------O---------"
-    "----------O--------O" */
+//     this statement takes the first graphic below 
+//     and turns it into the second
+//     "----------O---------"
+//     "----------O---------"
+//     "X-------------------"
+//     "----------O---------"
+//     "----------O---------"
+    
+//     "----------O--------O"
+//     "----------O--------O"
+//     "X------------------O"
+//     "----------O---------"
+//     "----------O--------O"
    
     
+    // generate an array obstacleArray of "O"s that has
       obstacleArray = Array(5).fill(obstacle);
       obstacleArray[getRandomInt()] = "-";   // ['o', 'o', '-', 'o', 'o']
 
@@ -122,37 +116,33 @@ var animate = function(){
     
   }
     
-
+    
+  /* here we concatenate 4 obstacles and 1 blank to the end of street */
   if(frameCounter === 19) {
      score++;
     
-    /*
-    this statement takes the first graphic below and turns it into the second
-    "O---------O---------"
-    "O---------O---------"
-    "O-------------------"
-    "X---------O---------"
-    "O---------O---------"
+// this statement takes the first graphic below and turns it into the second
+//     "O---------O---------"
+//     "O---------O---------"
+//     "O-------------------"
+//     "X---------O---------"
+//     "O---------O---------"
     
-    "----------O--------O"
-    "----------O--------O"
-    "X------------------O"
-    "----------O---------"
-    "----------O--------O"
-    */
+//     "----------O--------O"
+//     "----------O--------O"
+//     "X------------------O"
+//     "----------O---------"
+//     "----------O--------O"
     
      obstacleArray = Array(5).fill(obstacle);
-     obstacleArray[getRandomInt()] = "-";   // ['o', 'o', '-', 'o', 'o']
+     obstacleArray[getRandomInt()] = "-";   // e.g. ['o', 'o', '-', 'o', 'o']
 
      street = street.map(function(lane, i){
        return '-' + lane.slice(1, length - 1) + obstacleArray[i];
      })
- 
-    
-     street.forEach(function(lane){ console.log(lane)});
-  }
+ }
+  
 
-    
                     
   // currently obstacles never appear at the far right end of the lane.
    street = street.map(function(lane) {
@@ -170,7 +160,7 @@ var animate = function(){
    
   console.clear();
   console.log("Frame Count: " + frameCounter);
-  console.log("Current Score: " + displayScore());
+  console.log("Current Score: " + score);
   console.log("Current Speed: " + (220 - (score*score)));
   street.forEach(function(lane){
     console.log(lane);
@@ -189,7 +179,6 @@ var animate = function(){
    requires a static interval. So, the effect is achieved using setTimeout
    https://stackoverflow.com/questions/1280263/changing-the-interval-of-setinterval-while-its-running
 */
-
 function setAcceleratingTimeout(callback, factor)
 {
     var internalCallback = function(tick) {
