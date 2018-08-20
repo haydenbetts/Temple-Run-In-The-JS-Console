@@ -1,6 +1,6 @@
 
-var laneTemplateEmpty = "-------------------------";
-var laneTemplateInitial = "------------------------O"
+var laneTemplateEmpty = "--------------------";
+var laneTemplateInitial = "-------------------O"
 var playerChar = "X";
 var obstacle = "O";
 var playerPos = 2;
@@ -9,6 +9,8 @@ var paused = false;
 var highScore = 0;
 var score = 0;
 var keypressed;
+var frameCounter = 0;
+var obstacleArray = [];
 
 var drawPlayer = function(playerPos) {
   street[playerPos] = playerChar + street[playerPos].slice(1); 
@@ -34,6 +36,7 @@ lose = function() {
     score = 0;
     paused = false;
     playerPos = 2;
+    frameCounter = 0;
   }, 60);
 };
 
@@ -58,7 +61,7 @@ document.onkeydown = function(arg) {
   keypressed = keyCode;
 };
 
-var animate = setInterval(function(){
+var animate = function(){
     
   if(paused){
     return;
@@ -74,16 +77,33 @@ var animate = setInterval(function(){
   }
     
 
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
-   
-  if(street.some(function(elt) { return elt.slice(0,1) === "O"})) {
+  if(frameCounter === 19) {
      score++;
-     street = Array(5).fill(laneTemplateInitial);
-     street[getRandomInt()] = laneTemplateEmpty;
+    
+     obstacleArray = Array(5).fill(obstacle);
+     obstacleArray[getRandomInt()] = "-";   // ['o', 'o', '-', 'o', 'o']
+
+     street = street.map(function(lane, i){
+       return '-' + lane.slice(1, length - 1) + obstacleArray[i];
+     })
+ 
+    
      street.forEach(function(lane){ console.log(lane)});
   }
   
-                          
+  if (frameCounter === 9) {
+    
+    // generate an array obstacleArray of "O"s that has
+      obstacleArray = Array(5).fill(obstacle);
+      obstacleArray[getRandomInt()] = "-";   // ['o', 'o', '-', 'o', 'o']
+
+     street = street.map(function(lane, i){
+       return lane.slice(0, length - 1) + obstacleArray[i];
+     })
+    
+  }
+    
+                    
   // currently obstacles never appear at the far right end of the lane.
    street = street.map(function(lane) {
      return lane.slice(1) + '-';
@@ -99,14 +119,37 @@ var animate = setInterval(function(){
   
    
   console.clear();
+  console.log("Frame Count: " + frameCounter);
+  console.log("Current Score: " + score);
+  console.log("Current Speed: " + (220 - (score*score)));
   street.forEach(function(lane){
     console.log(lane);
   });
+  
+  if(frameCounter === 19) {
+    frameCounter = 0;
+  } else {
+    frameCounter++;
+  }
 
-},300);
+};
+
+function setAcceleratingTimeout(callback, factor)
+{
+    var internalCallback = function(tick) {
+        return function() {
+            if (factor >= 50) {            
+                window.setTimeout(internalCallback, factor - (score*score));
+                callback();
+            }
+        }
+    }(0);
+     
+    window.setTimeout(internalCallback, factor);
+};
   
 
-animate();
+setAcceleratingTimeout(animate, 220)
 
 
 function getRandomInt() {
