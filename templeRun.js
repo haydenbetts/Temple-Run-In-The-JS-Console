@@ -3,39 +3,36 @@
  1) When obstacles are inserted, they seem to start one frame
  to the left of where they should be
  2) emojis
- 3) closures (less global vars!!!!)
+ 3) currently the speed increases proportionate the the
+ square of the score. THis means that the game gets VERY hard
+ very fast. We could come up with a different algo for this 
+ that makes it more fun. 
+ 4) closures (less global vars!!!!)
 */
 
-var laneTemplateEmpty = "--------------------";
-var laneTemplateInitial = "-------------------O"
-var playerChar = "X";
-var obstacle = "O";
+var playerChar = '😆'; //"X";
+var obstacleDefaults = ['🚋', '🚗', '🚎', '🚒', '🚜'];
+var obstacle = () => obstacleDefaults[getRandomInt()];// "O";
+var obstacleArray = [];
+var laneTemplateEmpty = "------------------------------";
+var laneTemplateInitial = "----------------------------";
 var playerPos = 2;
-var street = [laneTemplateInitial, laneTemplateInitial, laneTemplateEmpty, laneTemplateInitial, laneTemplateInitial];
+var street = [laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle(), laneTemplateEmpty, laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle()];
 var paused = false;
+var displayScore = 0;
 var highScore = 0;
 var score = 0;
+var newFactor;
 
-/* TODO we are having some trouble actually displaying the raw score.
-   This is a hacky workaround.
-*/
-var displayScore = function() {
-  if (score === 0 || score === -1) {
-    return 0;
-  } else {
-    return score - 1;
-  }
-}
 
 var keypressed;
 /* frameCounter has a range 0-19. It increments each time
    animation runs. We reset it when it reaches 19 (e.g. when one
    elt has reached the end of street */
 var frameCounter = 0;
-var obstacleArray = [];
 
 var drawPlayer = function(playerPos) {
-  street[playerPos] = playerChar + street[playerPos].slice(1); 
+  street[playerPos] = playerChar + street[playerPos].slice(2); 
 }
 
 function isHighestScore(score, highScore) {
@@ -47,12 +44,11 @@ lose = function() {
   return setTimeout(function() {
  
     
-    if (isHighestScore(displayScore(), highScore)) {
-      highScore = displayScore();
+    if (isHighestScore(displayScore, highScore)) {
+      highScore = displayScore;
     }
-    
-    alert("Your score is: " + displayScore() + "\n" + "Your high score is: " + highScore);
-    street = [laneTemplateInitial, laneTemplateInitial, laneTemplateEmpty, laneTemplateInitial, laneTemplateInitial];
+    alert("Your score is: " + displayScore + "\n" + "Your high score is: " + highScore);
+    street = [laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle(), laneTemplateEmpty, laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle()];
     score = 0;
     paused = false;
     playerPos = 2;
@@ -96,7 +92,8 @@ var animate = function(){
     return;
   }
   
-  if (frameCounter === 9) {
+  if (frameCounter === 14) {
+    displayScore++;
     
     /* this statement takes the first graphic below 
     and turns it into the second
@@ -113,18 +110,19 @@ var animate = function(){
     "----------O--------O" */
    
     
-      obstacleArray = Array(5).fill(obstacle);
-      obstacleArray[getRandomInt()] = "-";   // ['o', 'o', '-', 'o', 'o']
+      obstacleArray = [obstacle(), obstacle(), obstacle(), obstacle(), obstacle()];
+      obstacleArray[getRandomInt()] = "--";   // ['o', 'o', '-', 'o', 'o']
 
      street = street.map(function(lane, i){
-       return lane.slice(0, length - 1) + obstacleArray[i];
+       return lane.slice(0, -2) + obstacleArray[i];
      })
     
   }
     
 
-  if(frameCounter === 19) {
+  if(frameCounter === 30) {
      score++;
+     displayScore++;
     
     /*
     this statement takes the first graphic below and turns it into the second
@@ -141,45 +139,47 @@ var animate = function(){
     "----------O--------O"
     */
     
-     obstacleArray = Array(5).fill(obstacle);
-     obstacleArray[getRandomInt()] = "-";   // ['o', 'o', '-', 'o', 'o']
+     obstacleArray = obstacleArray = [obstacle(), obstacle(), obstacle(), obstacle(), obstacle()];
+     obstacleArray[getRandomInt()] = "--";   // ['o', 'o', '-', 'o', 'o']
 
      street = street.map(function(lane, i){
-       return '-' + lane.slice(1, length - 1) + obstacleArray[i];
+       return '--' +lane.slice(2, -2) + obstacleArray[i];
      })
  
     
      street.forEach(function(lane){ console.log(lane)});
   }
 
-    
                     
   // currently obstacles never appear at the far right end of the lane.
    street = street.map(function(lane) {
-     return lane.slice(1) + '-';
+     return lane.slice(2) + '--';
    })
   
-  var charUnderPlayer = street[playerPos].slice(0,1);
+  var charUnderPlayer = street[playerPos].slice(0,2);
+ // String.fromCodePoint(parseInt('1F4A3', 16))
  
-  if (charUnderPlayer === "O") {
-    lose();
-  }
       
   drawPlayer(playerPos);
-  
+
+  if (obstacleDefaults.indexOf(charUnderPlayer) > -1) {
+    street[playerPos] = '🔥' + street[playerPos].slice(2);
+    lose();
+  }
    
   console.clear();
-  console.log("Frame Count: " + frameCounter);
-  console.log("Current Score: " + displayScore());
-  console.log("Current Speed: " + (220 - (score*score)));
+  console.log("High Score: " + highScore);
+  console.log("Score: " + displayScore);
+  console.log("Current Speed: " + (301 - newFactor)); //speed = score*score? (increment rather)
+  //console.log("Char under Player: " + charUnderPlayer.codePointAt(0).toString(16)); //necessary?
   street.forEach(function(lane){
     console.log(lane);
   });
   
-  if(frameCounter === 19) {
+  if(frameCounter === 30) {
     frameCounter = 0;
   } else {
-    frameCounter++;
+    frameCounter+= 2;
   }
 
 };
@@ -194,8 +194,12 @@ function setAcceleratingTimeout(callback, factor)
 {
     var internalCallback = function(tick) {
         return function() {
-            if (factor >= 50) {            
-                window.setTimeout(internalCallback, factor - (score*score));
+            if (score <= 6) { 
+                newFactor = factor - (score*score*5.5);
+                window.setTimeout(internalCallback, newFactor);
+                callback();
+            } else {
+                window.setTimeout(internalCallback, newFactor);
                 callback();
             }
         }
@@ -205,7 +209,7 @@ function setAcceleratingTimeout(callback, factor)
 };
   
 
-setAcceleratingTimeout(animate, 220)
+setAcceleratingTimeout(animate, 300)
 
 
 function getRandomInt() {
