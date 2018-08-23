@@ -208,7 +208,7 @@ function setAcceleratingTimeout(callback, factor)
     window.setTimeout(internalCallback, factor);
 };
   
-
+// updated
 setAcceleratingTimeout(animate, 300)
 
 
