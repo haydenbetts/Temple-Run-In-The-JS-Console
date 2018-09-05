@@ -15,14 +15,14 @@ var obstacleDefaults = ['🚋', '🚗', '🚎', '🚒', '🚜'];
 var obstacle = () => obstacleDefaults[getRandomInt()];// "O";
 var obstacleArray = [];
 var laneTemplateEmpty = "------------------------------";
-var laneTemplateInitial = "----------------------------";
+var laneTemplateObstacle = "----------------------------" + obstacle();
 var playerPos = 2;
-var street = [laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle(), laneTemplateEmpty, laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle()];
+var street = [laneTemplateObstacle, laneTemplateObstacle, laneTemplateEmpty, laneTemplateObstacle, laneTemplateObstacle];
 var paused = false;
 var displayScore = 0;
-var highScore = 0;
-var score = 0;
+var speed = 0;
 var newFactor;
+var highScore = 0;
 
 
 var keypressed;
@@ -35,21 +35,22 @@ var drawPlayer = function(playerPos) {
   street[playerPos] = playerChar + street[playerPos].slice(2); 
 }
 
-function isHighestScore(score, highScore) {
-  return score > highScore;
+function isHighestScore(displayScore, highScore) {
+  return displayScore > highScore;
 }
 
 lose = function() {
   paused = true;
   return setTimeout(function() {
- 
+    
     
     if (isHighestScore(displayScore, highScore)) {
       highScore = displayScore;
     }
     alert("Your score is: " + displayScore + "\n" + "Your high score is: " + highScore);
-    street = [laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle(), laneTemplateEmpty, laneTemplateInitial + obstacle(), laneTemplateInitial + obstacle()];
-    score = 0;
+    street = [laneTemplateObstacle, laneTemplateObstacle, laneTemplateEmpty, laneTemplateObstacle, laneTemplateObstacle];
+    speed = 0;
+    displayScore = 0;
     paused = false;
     playerPos = 2;
     frameCounter = 0;
@@ -87,13 +88,49 @@ var animate = function(){
     movements[keypressed]();
     keypressed = null;
   }
+  
   if (keypressed === 27) {
-    clearInterval(animate);
     return;
   }
   
-  if (frameCounter === 14) {
-    displayScore++;
+  if(street.some((lane) => obstacleDefaults.includes(lane.slice(0,2)))) {
+     displayScore++
+     street = street.map(function(lane, i){
+       return '--' +lane.slice(2);
+     })
+     
+  }
+
+  if ((frameCounter === 14 || frameCounter === 30) && speed < 4) {
+    speed++;
+ 
+    
+    /* this statement takes the first graphic like the below 
+    and turns it into the second
+    "----------O---------"
+    "----------O---------"
+    "X-------------------"
+    "----------O---------"
+    "----------O---------"
+    
+    "----------O--------O"
+    "----------O--------O"
+    "X------------------O"
+    "----------O---------"
+    "----------O--------O" */
+   
+    
+      obstacleArray = [obstacle(), obstacle(), obstacle(), obstacle(), obstacle()];
+      obstacleArray[getRandomInt()] = "--";   // ['o', 'o', '-', 'o', 'o']
+
+     street = street.map(function(lane, i){
+       return lane.slice(0, -2) + obstacleArray[i];
+     })
+  }
+  
+    if ((frameCounter === 10 || frameCounter === 20 || frameCounter === 30) && speed >= 4) {
+    speed++;
+ 
     
     /* this statement takes the first graphic below 
     and turns it into the second
@@ -116,40 +153,8 @@ var animate = function(){
      street = street.map(function(lane, i){
        return lane.slice(0, -2) + obstacleArray[i];
      })
-    
   }
     
-
-  if(frameCounter === 30) {
-     score++;
-     displayScore++;
-    
-    /*
-    this statement takes the first graphic below and turns it into the second
-    "O---------O---------"
-    "O---------O---------"
-    "O-------------------"
-    "X---------O---------"
-    "O---------O---------"
-    
-    "----------O--------O"
-    "----------O--------O"
-    "X------------------O"
-    "----------O---------"
-    "----------O--------O"
-    */
-    
-     obstacleArray = obstacleArray = [obstacle(), obstacle(), obstacle(), obstacle(), obstacle()];
-     obstacleArray[getRandomInt()] = "--";   // ['o', 'o', '-', 'o', 'o']
-
-     street = street.map(function(lane, i){
-       return '--' +lane.slice(2, -2) + obstacleArray[i];
-     })
- 
-    
-     street.forEach(function(lane){ console.log(lane)});
-  }
-
                     
   // currently obstacles never appear at the far right end of the lane.
    street = street.map(function(lane) {
@@ -168,10 +173,7 @@ var animate = function(){
   }
    
   console.clear();
-  console.log("High Score: " + highScore);
-  console.log("Score: " + displayScore);
-  console.log("Current Speed: " + (301 - newFactor)); //speed = score*score? (increment rather)
-  //console.log("Char under Player: " + charUnderPlayer.codePointAt(0).toString(16)); //necessary?
+  displayHeader(highScore, displayScore, newFactor);
   street.forEach(function(lane){
     console.log(lane);
   });
@@ -184,31 +186,37 @@ var animate = function(){
 
 };
 
+function displayHeader(highScore, displayScore, newFactor) {
+  console.log("High Score: " + highScore);
+  console.log("Score: " + displayScore);
+  console.log("Current Speed: " + (301 - newFactor)); 
+}
+
 /* this code calls animate after shorter and shorter time steps
    we could not use setInterval to achieve this because setInterval
    requires a static interval. So, the effect is achieved using setTimeout
    https://stackoverflow.com/questions/1280263/changing-the-interval-of-setinterval-while-its-running
 */
 
-function setAcceleratingTimeout(callback, factor)
+function setAcceleratingTimeout(animationFrame, factor)
 {
-    var internalCallback = function(tick) {
+    var internalCallback = function() {
         return function() {
-            if (score <= 6) { 
-                newFactor = factor - (score*score*5.5);
-                window.setTimeout(internalCallback, newFactor);
-                callback();
+            if (speed <= 6) { 
+                newFactor = factor - (speed*speed*5);
+                setTimeout(internalCallback, newFactor);
+                animationFrame();
             } else {
-                window.setTimeout(internalCallback, newFactor);
-                callback();
+                setTimeout(internalCallback, newFactor);
+                animationFrame();
             }
         }
-    }(0);
+    }();
      
     window.setTimeout(internalCallback, factor);
 };
   
-// updated
+
 setAcceleratingTimeout(animate, 300)
 
 
