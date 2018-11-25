@@ -1,5 +1,6 @@
 # Temple Run Clone in the Javascript Console
-![Alt Text](https://i.imgur.com/Vx0ZKsO.gif)
+<img src="https://i.imgur.com/Vx0ZKsO.gif" width="450">
+
 
 # Live Demo
 See project running here:
