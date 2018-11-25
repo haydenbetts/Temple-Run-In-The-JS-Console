@@ -1,4 +1,4 @@
-# Temple Run Clone for Javascript Browser Console
+# Temple Run Clone in the Javascript Console
 ![Alt Text](https://i.imgur.com/Vx0ZKsO.gif)
 
 # Live Demo
