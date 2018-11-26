@@ -5,5 +5,4 @@ A hackathon project built around the concept of using `console.clear` and `conso
 Play the game here:
 
 > http://jsbin.com/jubirow/edit?js,console,output
-
 <img src="https://i.imgur.com/Vx0ZKsO.gif" width="450">
