@@ -1,13 +1,9 @@
 /*
- TODO: 
- 1) When obstacles are inserted, they seem to start one frame
- to the left of where they should be
- 2) emojis
- 3) currently the speed increases proportionate the the
- square of the score. THis means that the game gets VERY hard
+ 1) currently the speed increases proportionate the the
+ square of the score. This means that the game gets VERY hard
  very fast. We could come up with a different algo for this 
  that makes it more fun. 
- 4) closures (less global vars!!!!)
+ 2) closures (fewer global vars!!!!)
 */
 
 var playerChar = '😆'; //"X";
@@ -23,7 +19,6 @@ var displayScore = 0;
 var speed = 0;
 var newFactor;
 var highScore = 0;
-
 
 var keypressed;
 /* frameCounter has a range 0-19. It increments each time
@@ -155,15 +150,11 @@ var animate = function(){
      })
   }
     
-                    
-  // currently obstacles never appear at the far right end of the lane.
-   street = street.map(function(lane) {
+     street = street.map(function(lane) {
      return lane.slice(2) + '--';
    })
   
-  var charUnderPlayer = street[playerPos].slice(0,2);
- // String.fromCodePoint(parseInt('1F4A3', 16))
- 
+  var charUnderPlayer = street[playerPos].slice(0,2); 
       
   drawPlayer(playerPos);
 
